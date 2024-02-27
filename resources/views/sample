@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Exports;
+
+use App\Models\KartuStok;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+
+class KartuStokExport implements FromCollection, WithHeadings, WithMapping
+{
+    protected $tanggal_mulai;
+    protected $tanggal_selesai;
+
+    public function __construct($tanggal_mulai, $tanggal_selesai)
+    {
+        $this->tanggal_mulai = $tanggal_mulai;
+        $this->tanggal_selesai = $tanggal_selesai;
+    }
+
+    public function collection()
+    {
+        return KartuStok::select(
+            'kartu_stoks.tanggal',
+            'kartu_stoks.keterangan',
+            'kartu_stoks.masuk',
+            'kartu_stoks.keluar',
+            'kartu_stoks.jumlah',
+        )
+        ->whereBetween('tanggal', [$this->tanggal_mulai, $this->tanggal_selesai])
+        ->get();
+    }
+
+    public function headings(): array
+    {
+        return ["No", "Tanggal", "Keterangan", "Masuk", "Keluar", "Jumlah"];
+    }
+
+    /**
+     * @param mixed $kartuStok
+     * @return array
+     */
+    public function map($kartuStok): array
+    {
+        static $no = 0;
+        $no++;
+
+        return [
+            $no,
+            $kartuStok->tanggal,
+            $kartuStok->keterangan,
+            $kartuStok->masuk,
+            $kartuStok->keluar,
+            $kartuStok->jumlah,
+        ];
+    }
+}
